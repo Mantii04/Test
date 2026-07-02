@@ -4,28 +4,36 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  crave-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # 1. Install correct Crave binary (IMPORTANT: amd64)
       - name: Install Crave CLI
         run: |
-          curl -L -o crave https://github.com/accupara/crave/releases/download/0.2-7220/crave-0.2-7220-linux-aarch64.bin
+          curl -L -o crave https://github.com/accupara/crave/releases/download/0.2-7220/crave-0.2-7220-linux-amd64.bin
           chmod +x crave
           sudo mv crave /usr/local/bin/
 
+      # 2. Verify binary works
+      - name: Verify Crave version
+        run: crave version
+
+      # 3. Inject config from GitHub secret
       - name: Setup Crave config
         run: |
           mkdir -p ~/.crave
           echo "${{ secrets.CRAVE_CONF }}" > ~/.crave/crave.conf
 
-      - name: Verify config loads
+      # 4. Validate config is readable
+      - name: Test Crave list (non-interactive)
         run: |
           crave -c ~/.crave/crave.conf list
 
-      - name: Test devspace (safe check)
+      # 5. Optional safe command test (no devspace)
+      - name: Safe smoke test
         run: |
-          crave -c ~/.crave/crave.conf devspace || true
+          crave -c ~/.crave/crave.conf run echo "Crave pipeline is working"
