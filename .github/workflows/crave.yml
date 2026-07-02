@@ -1,0 +1,31 @@
+name: Crave CI Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Crave CLI
+        run: |
+          curl -L -o crave https://github.com/accupara/crave/releases/download/0.2-7220/crave-0.2-7220-linux-aarch64.bin
+          chmod +x crave
+          sudo mv crave /usr/local/bin/
+
+      - name: Setup Crave config
+        run: |
+          mkdir -p ~/.crave
+          echo "${{ secrets.CRAVE_CONF }}" > ~/.crave/crave.conf
+
+      - name: Verify config loads
+        run: |
+          crave -c ~/.crave/crave.conf list
+
+      - name: Test devspace (safe check)
+        run: |
+          crave -c ~/.crave/crave.conf devspace || true
